@@ -100,6 +100,9 @@ function InputStream(input) {
   var line = 1;
   var col = 0;
 
+  console.log("IS input ->", input);
+
+  // Methods available on function
   return {
     next: next,
     peek: peek,
@@ -141,9 +144,33 @@ function InputStream(input) {
  */
 
 function TokenStream(input) {
+  var current = null;
+  const KEYWORDS = " if then else lambda λ true false ";
+
+  // Methods available on function
+  return {
+    next: next,
+    peek: peek,
+    eof: eof,
+    croak: input.croak,
+  };
+
   // Is typeof utilities
+  function isKeyword(ch) {
+    // For reserved language keywords
+    return KEYWORDS.indexOf(" " + ch + " ") >= 0;
+  }
   function isDigit(ch) {
     return /[0-9]/i.test(ch);
+  }
+  function isIdStart(ch) {
+    return /[a-zλ_]/i.test(ch);
+  }
+  function isId(ch) {
+    return isIdStart(ch) || "?!-<>=0123456789".indexOf(ch) >= 0;
+  }
+  function isOperator(ch) {
+    return "+-*/%=&|<>!".indexOf(ch) >= 0;
   }
   function isPunctuation(ch) {
     return ",;(){}[]".indexOf(ch) >= 0;
@@ -162,6 +189,97 @@ function TokenStream(input) {
   // If it's one of the operator characters, return an operator token.
   // If none of the above, error out with input.croak().
 
+  // Dictates reading rules
+
+  function readWhile(predicate) {
+    var str = "";
+    while (!input.eof() && predicate(input.peek())) {
+      console.log("Iterating over predicate", predicate(), str);
+
+      str = str + input.next();
+    }
+    return str;
+  }
+
+  // Returns adequate token for each "primitive"
+
+  function readString() {
+    return { type: "str", value: readEscaped('"') };
+  }
+
+  // ????
+  function readNumber() {
+    var hasDot = false;
+    var number = readWhile(function(ch) {
+      if (ch == ".") {
+        if (hasDot) {
+          return false;
+        }
+        hasDot = true;
+        return true;
+      }
+      return isDigit(ch);
+    });
+    return { type: "num", value: parseFloat(number) };
+  }
+
+  function readId() {
+    var id = readWhile(isId);
+    return {
+      type: isKeyword(id) ? "kw" : "var",
+      value: id,
+    };
+  }
+
+  function readOperator() {
+    return {
+      type: "op",
+      value: readWhile(isOperator),
+    };
+  }
+
+  function readPunctuation() {
+    return {
+      type: "punc",
+      value: input.next(),
+    };
+  }
+
+  function readEscaped(end) {
+    // Escaped character invokes an alternative interpretation
+    // on subsequent characters in a character sequence. Such as \', \\ ...
+
+    var escaped = false;
+    var str = "";
+
+    input.next();
+
+    while (!input.eof()) {
+      var ch = input.next();
+
+      if (escaped) {
+        str = str + ch;
+        escaped = false;
+      } else if (ch == "\\") {
+        escaped = true;
+      } else if (ch == end) {
+        break;
+      } else {
+        str = str + ch;
+      }
+    }
+    return str;
+  }
+
+  function skipComment() {
+    var isNotNewline = function(ch) {
+      return ch != "\n";
+    };
+
+    readWhile(isNotNewline);
+    input.next();
+  }
+
   function readNext() {
     readWhile(isWhitespace);
 
@@ -179,26 +297,36 @@ function TokenStream(input) {
       return readString();
     }
     if (isDigit(ch)) {
+      console.log("ENTERS");
       return readNumber();
     }
     if (isIdStart(ch)) {
-      return readIdent();
-    }
-    if (isIdStart(ch)) {
-      return readIdent();
+      return readId();
     }
     if (isPunctuation(ch)) {
-      return {
-        type: "punc",
-        value: input.next(),
-      };
+      return readPunctuation();
     }
-    if (isOperatorCh(ch))
-      return {
-        type: "op",
-        value: readWhile(isOperatorCh),
-      };
+    if (isOperator(ch)) {
+      return readOperator();
+    }
 
     return input.croak("Can't handle character on " + ch);
   }
+
+  function peek() {
+    return current || (current = readNext());
+  }
+
+  function next() {
+    var token = current;
+    current = null;
+
+    return token || readNext();
+  }
+
+  function eof() {
+    return peek() == null;
+  }
 }
+
+console.log(TokenStream(InputStream("cena")).next());
