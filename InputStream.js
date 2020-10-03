@@ -11,12 +11,11 @@ module.exports = function InputStream(input) {
   var LINE = 1;
   var COL = 0;
 
-  // Methods available on function
+  // Methods available on InputStream
   return {
     next: next,
     peek: peek,
     eof: eof,
-    //EOF: End of file
     croak: croak,
   };
 

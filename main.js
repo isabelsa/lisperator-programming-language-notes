@@ -14,4 +14,6 @@ const Parser = require("./Parser");
  *
  * */
 
-console.log(TokenStream(InputStream("cena")).next());
+var TEST_INPUT = "cenas";
+
+console.log(TokenStream(InputStream(TEST_INPUT)).next());
