@@ -25,6 +25,8 @@ module.exports = function TokenStream(input) {
   var current = null;
   const KEYWORDS = " if then else lambda λ true false ";
 
+  console.log("RUNS");
+
   // Methods available on TokenStream
   return {
     next: next,
@@ -121,7 +123,7 @@ module.exports = function TokenStream(input) {
   function readWhile(predicate) {
     var str = "";
     while (!input.eof() && predicate(input.peek())) {
-      console.log("Iterating over predicate", predicate(), str);
+      console.log("On TokenStream -> Iterating over predicate", predicate(), str);
       str = str + input.next();
     }
     return str;
