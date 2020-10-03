@@ -191,20 +191,18 @@ module.exports = function Parser(input) {
   }
 
   function argumentDelimitor(start, stop, separator, parser) {
-    var args = [];
-    var first = true;
+    var args = [],
+      first = true;
+
     skipPunctuation(start);
+
     while (!input.eof()) {
-      if (isPunctuation(stop)) {
-        break;
-      }
-      if (isPunctuation(first)) {
-        first = false;
-      }
-      if (isPunctuation(stop)) {
-        break;
-      }
-      args.push(parser);
+      if (isPunctuation(stop)) break;
+      if (first) first = false;
+      else skipPunctuation(separator);
+      if (isPunctuation(stop)) break;
+
+      args.push(parser());
     }
 
     skipPunctuation(stop);

@@ -16,6 +16,6 @@ const Parser = require("./Parser");
  *
  * */
 
-var TEST_INPUT = `foo = 5`;
+var TEST_INPUT = `lambda (x) 10`;
 
 console.log(inspect(Parser(TokenStream(InputStream(TEST_INPUT))), { showHidden: true, depth: null }));
