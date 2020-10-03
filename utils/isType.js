@@ -1,8 +1,8 @@
 const KEYWORDS = " if then else lambda λ true false ";
 
 // On regex /i stands for ignore case (case-insensitive) in the given string.
-function isKeyword(ch) {
-  return KEYWORDS.indexOf(" " + ch + " ") >= 0;
+function isKeyword(x) {
+  return KEYWORDS.indexOf(" " + x + " ") >= 0;
 }
 function isDigit(ch) {
   return /[0-9]/i.test(ch);
@@ -31,4 +31,5 @@ module.exports = {
   isKeyword,
   isPunctuation,
   isWhitespace,
+  KEYWORDS,
 };

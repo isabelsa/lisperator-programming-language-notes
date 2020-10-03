@@ -28,6 +28,8 @@ module.exports = function Parser(input) {
     "%": 20,
   };
 
+  return parseTopLevel();
+
   // * ------------------------------------------------------
   // All parsing functions
   function parseTopLevel() {
@@ -78,6 +80,8 @@ module.exports = function Parser(input) {
     var program = argumentDelimitor("{", "}", ";", parseExpression);
     if (program.length == 0) return FALSE;
     if (program.length == 1) return program[0];
+
+    console.log("In parser:", program);
     return { type: "prog", prog: program };
   }
 
@@ -144,19 +148,16 @@ module.exports = function Parser(input) {
   // * ------------------------------------------------------
   // Skip functions
   function skipOperator(op) {
-    if (isOperator(op)) {
-      input.next();
-    } else input.croak('Expecting operator: "' + op + '"');
+    if (isOperator(op)) input.next();
+    else input.croak('Expecting operator: "' + op + '"');
   }
   function skipKeyword(kw) {
-    if (isKeyword(kw)) {
-      input.next();
-    } else input.croak('Expecting keyword: "' + kw + '"');
+    if (isKeyword(kw)) input.next();
+    else input.croak('Expecting keyword: "' + kw + '"');
   }
   function skipPunctuation(ch) {
-    if (isPunctuation(ch)) {
-      input.next();
-    } else input.croak('Expecting punctuation: "' + ch + '"');
+    if (isPunctuation(ch)) input.next();
+    else input.croak('Expecting punctuation: "' + ch + '"');
   }
   function unexpected() {
     input.croak("Unexpected token: " + JSON.stringify(input.peek()));
@@ -169,23 +170,24 @@ module.exports = function Parser(input) {
     return isPunctuation("(") ? parseCall(expr) : expr;
   }
 
-  function maybeBinary(left, currentPrecendece) {
+  function maybeBinary(left, currentPrecedence) {
     var token = isOperator();
-
     if (token) {
-      var tokenPrecedence = PRECEDENCE[token.value];
-      if (tokenPrecedence > currentPrecendece) {
+      var hisPrecendence = PRECEDENCE[token.value];
+      if (hisPrecendence > currentPrecedence) {
         input.next();
-        var right = maybeBinary(parseAtom(), tokenPrecedence);
-        var binary = {
-          type: token.value == "=" ? "assign" : "binary",
-          operator: token.value,
-          left: left,
-          right: right,
-        };
-        return maybeBinary(binary, currentPrecendece);
+        return maybeBinary(
+          {
+            type: token.value == "=" ? "assign" : "binary",
+            operator: token.value,
+            left: left,
+            right: maybeBinary(parseAtom(), hisPrecendence),
+          },
+          currentPrecedence
+        );
       }
     }
+    return left;
   }
 
   function argumentDelimitor(start, stop, separator, parser) {
@@ -208,6 +210,4 @@ module.exports = function Parser(input) {
     skipPunctuation(stop);
     return args;
   }
-
-  return parseTopLevel();
 };

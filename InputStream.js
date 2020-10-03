@@ -7,9 +7,9 @@
  */
 
 module.exports = function InputStream(input) {
-  var POS = 0;
-  var LINE = 1;
-  var COL = 0;
+  var pos = 0,
+    line = 1,
+    col = 0;
 
   // Methods available on InputStream
   return {
@@ -20,17 +20,14 @@ module.exports = function InputStream(input) {
   };
 
   function next() {
-    var ch = input.charAt(POS++);
-    if (ch == "\n") {
-      LINE++;
-      COL = 0;
-    } else COL++;
-
+    var ch = input.charAt(pos++);
+    if (ch == "\n") line++, (col = 0);
+    else col++;
     return ch;
   }
 
   function peek() {
-    return input.charAt(POS);
+    return input.charAt(pos);
   }
 
   function eof() {
@@ -38,6 +35,6 @@ module.exports = function InputStream(input) {
   }
 
   function croak(msg) {
-    throw new Error(msg + ` line: ${LINE}, col: ${COL}`);
+    throw new Error(`In Lambda: ${msg}  +  line: ${line}, col: ${col}`);
   }
 };

@@ -1,4 +1,13 @@
-const { isDigit, isId, isIdStart, isOperator, isKeyword, isPunctuation, isWhitespace } = require("./utils/isType");
+const {
+  isDigit,
+  isId,
+  isIdStart,
+  isOperator,
+  isKeyword,
+  isPunctuation,
+  isWhitespace,
+  KEYWORDS,
+} = require("./utils/isType");
 /*
  * (1.2) Parser: TOKENIZER (Or lexer)
  * ------------------------------------------------------
@@ -23,9 +32,6 @@ const { isDigit, isId, isIdStart, isOperator, isKeyword, isPunctuation, isWhites
 
 module.exports = function TokenStream(input) {
   var current = null;
-  const KEYWORDS = " if then else lambda λ true false ";
-
-  console.log("RUNS");
 
   // Methods available on TokenStream
   return {
@@ -35,17 +41,15 @@ module.exports = function TokenStream(input) {
     croak: input.croak,
   };
 
-  function peek() {
-    return current || (current = readNext());
-  }
-
   function next() {
     var token = current;
     current = null;
 
     return token || readNext();
   }
-
+  function peek() {
+    return current || (current = readNext());
+  }
   function eof() {
     return peek() == null;
   }
@@ -74,7 +78,7 @@ module.exports = function TokenStream(input) {
   function readId() {
     var id = readWhile(isId);
     return {
-      type: isKeyword(id) ? "keyword" : "var",
+      type: isKeyword(id) ? "kw" : "var",
       value: id,
     };
   }
@@ -96,23 +100,22 @@ module.exports = function TokenStream(input) {
   function readEscaped(end) {
     // Escaped character invokes an alternative interpretation
     // on subsequent characters in a character sequence. Such as \', \\ ...
-    var escaped = false;
-    var str = "";
+    var escaped = false,
+      str = "";
 
     input.next();
 
     while (!input.eof()) {
       var ch = input.next();
-
       if (escaped) {
-        str = str + ch;
+        str += ch;
         escaped = false;
       } else if (ch == "\\") {
         escaped = true;
       } else if (ch == end) {
         break;
       } else {
-        str = str + ch;
+        str += ch;
       }
     }
     return str;
@@ -123,8 +126,8 @@ module.exports = function TokenStream(input) {
   function readWhile(predicate) {
     var str = "";
     while (!input.eof() && predicate(input.peek())) {
-      console.log("On TokenStream -> Iterating over predicate", predicate(), str);
-      str = str + input.next();
+      console.log(`TokenStream -> Iterating over predicate, Is: ${predicate()}, Output: ${str}`);
+      str += input.next();
     }
     return str;
   }
@@ -137,36 +140,23 @@ module.exports = function TokenStream(input) {
     }
 
     var ch = input.peek();
-
     if (ch == "#") {
       skipComment();
       return readNext();
     }
-    if (ch == '"') {
-      return readString();
-    }
-    if (isDigit(ch)) {
-      return readNumber();
-    }
-    if (isIdStart(ch)) {
-      return readId();
-    }
-    if (isPunctuation(ch)) {
-      return readPunctuation();
-    }
-    if (isOperator(ch)) {
-      return readOperator();
-    }
+    if (ch == '"') return readString();
+    if (isDigit(ch)) return readNumber();
+    if (isIdStart(ch)) return readId();
+    if (isPunctuation(ch)) return readPunctuation();
+    if (isOperator(ch)) return readOperator();
 
     return input.croak("Can't handle character on " + ch);
   }
 
   function skipComment() {
-    var isNotNewline = function (ch) {
+    readWhile(function (ch) {
       return ch != "\n";
-    };
-
-    readWhile(isNotNewline);
+    });
     input.next();
   }
 };

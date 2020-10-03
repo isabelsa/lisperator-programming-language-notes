@@ -1,3 +1,5 @@
+const { inspect } = require("util");
+
 const InputStream = require("./InputStream");
 const TokenStream = require("./TokenStream");
 const Parser = require("./Parser");
@@ -14,6 +16,6 @@ const Parser = require("./Parser");
  *
  * */
 
-var TEST_INPUT = "123.5";
+var TEST_INPUT = `foo = 5`;
 
-console.log(Parser(TokenStream(InputStream(TEST_INPUT))));
+console.log(inspect(Parser(TokenStream(InputStream(TEST_INPUT))), { showHidden: true, depth: null }));
