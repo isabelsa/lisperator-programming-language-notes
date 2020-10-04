@@ -16,6 +16,47 @@ const Parser = require("./Parser");
  *
  * */
 
-var TEST_INPUT = `lambda (x) 10`;
+function Environment(parent) {
+  this.vars = Object.create(parent ? parent.vars : null);
+  this.parent = parent;
 
-console.log(inspect(Parser(TokenStream(InputStream(TEST_INPUT))), { showHidden: true, depth: null }));
+  console.log(this);
+}
+
+Environment.prototype = {
+  extend: function () {
+    return new Environment(this);
+  },
+  lookup: function (name) {
+    var scope = this;
+    while (scope) {
+      if (Object.prototype.hasOwnProperty.call(scope.vars, name)) {
+        return scope;
+      }
+      scope = scope.parent;
+    }
+  },
+  get: function (name) {
+    if (name in this.vars) {
+      return this.vars[name];
+    }
+    throw new Error(`Undefined variable + ${name}`);
+  },
+  set: function (name, value) {
+    var scope = this.lookup(name);
+
+    if (!scope && this.parent) {
+      throw new Error(`Undefined variable + ${name}`);
+    }
+
+    return ((scope || this).vars[name] = value);
+  },
+  def: function (name, value) {
+    return (this.vars[name] = value);
+  },
+};
+
+var TEST_INPUT = `foo = "Hello world!"; bar = "Hello again!"`;
+
+console.log(inspect(Environment.prototype, { showHidden: true, depth: null }));
+// console.log(inspect(Parser(TokenStream(InputStream(TEST_INPUT))), { showHidden: true, depth: null }));
