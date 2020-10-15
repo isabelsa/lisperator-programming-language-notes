@@ -7,7 +7,7 @@ const {
   isPunctuation,
   isWhitespace,
   KEYWORDS,
-} = require("./utils/isType");
+} = require("../utils/isType");
 /*
  * (1.2) Parser: TOKENIZER (Or lexer)
  * ------------------------------------------------------

@@ -1,8 +1,10 @@
 const { inspect } = require("util");
 
-const InputStream = require("./InputStream");
-const TokenStream = require("./TokenStream");
-const Parser = require("./Parser");
+const Environment = require("./environment");
+const InputStream = require("./parser/inputStream");
+const TokenStream = require("./parser/tokenStream");
+const evaluate = require("./evaluate");
+const parse = require("./parser/parse");
 
 /*
  * START HERE
@@ -16,47 +18,25 @@ const Parser = require("./Parser");
  *
  * */
 
-function Environment(parent) {
-  this.vars = Object.create(parent ? parent.vars : null);
-  this.parent = parent;
+/*
+ * START HERE
+ * Introduction: THE LANGUAGE
+ * ------------------------------------------------------
+ * ------------------------------------------------------
+ * This an implementation of a LISP-like language based on Lisperator.net's tutorial on how to implement
+ * a programming language in Javascript. These are some observations and implementations of the tutorial.
+ * The syntax we're trying to achieve is available with examples on the `ast.md` file.
+ *
+ *
+ * */
 
-  console.log(this);
-}
+var CODE = "sum = lambda(x, y) x + y; print(sum(2, 3));";
 
-Environment.prototype = {
-  extend: function () {
-    return new Environment(this);
-  },
-  lookup: function (name) {
-    var scope = this;
-    while (scope) {
-      if (Object.prototype.hasOwnProperty.call(scope.vars, name)) {
-        return scope;
-      }
-      scope = scope.parent;
-    }
-  },
-  get: function (name) {
-    if (name in this.vars) {
-      return this.vars[name];
-    }
-    throw new Error(`Undefined variable + ${name}`);
-  },
-  set: function (name, value) {
-    var scope = this.lookup(name);
+var ast = parse(TokenStream(InputStream(CODE)));
+var globalEnv = new Environment();
 
-    if (!scope && this.parent) {
-      throw new Error(`Undefined variable + ${name}`);
-    }
+globalEnv.def("print", function (txt) {
+  console.log(txt);
+});
 
-    return ((scope || this).vars[name] = value);
-  },
-  def: function (name, value) {
-    return (this.vars[name] = value);
-  },
-};
-
-var TEST_INPUT = `foo = "Hello world!"; bar = "Hello again!"`;
-
-console.log(inspect(Environment.prototype, { showHidden: true, depth: null }));
-// console.log(inspect(Parser(TokenStream(InputStream(TEST_INPUT))), { showHidden: true, depth: null }));
+evaluate(ast, globalEnv);
